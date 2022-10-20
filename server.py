@@ -170,12 +170,12 @@ def ver_directorios():
                 i+=1
 
 #FUNCIONES QUE PUEDE EJECUTAR EL CLIENTE DE FORMA REMOTA
-def solicitar_directorio():
-    i = 0 
-    print("Este es tu directorio disponible:")
-    lista = os.listdir(f'ldap_files/directorios/{group}')
-    for elemento in lista:
-        print(str(i)+".-"+elemento)
+# def solicitar_directorio():
+#     i = 0 
+#     print("Este es tu directorio disponible:")
+#     lista = os.listdir(f'ldap_files/directorios/{group}')
+#     for elemento in lista:
+#         print(str(i)+".-"+elemento)
 
 #FUNCIONES DE SOCKECTS
 def inicio_sesion_cliente(conn):
@@ -192,8 +192,9 @@ def inicio_sesion_cliente(conn):
         password_user = conn.recv(1024).decode(FORMAT)
         # print(password_user)
         try: 
+            #
             datos_sesion = open(f'ldap_files/groups/Group_{name_group}.txt','r',encoding= FORMAT)
-            
+            #Recorre el archivo entre los usuarios buscando el nombre y contraseña indicados
             for line in datos_sesion:
                 
                 if line == f"{name_user}:{password_user}\n" or line == f"{name_user}:{password_user}" :
@@ -205,11 +206,12 @@ def inicio_sesion_cliente(conn):
                         sesion_cliente = True
                         conn.send(aprobado_cliente.encode(FORMAT))
                         break
-                else:
-                    inicio_denegado ="Inicio de sesion denegado!\nTu usuario o contraseña son incorrectos"
-                    conn.send(inicio_denegado.encode(FORMAT))
-                    conn.send("False".encode(FORMAT))
-                        
+                    else:
+                        inicio_denegado ="Inicio de sesion denegado!\nTu usuario o contraseña son incorrectos"
+                        conn.send(inicio_denegado.encode(FORMAT))
+                        conn.send("False".encode(FORMAT))
+                        break
+
             datos_sesion.close()
         except FileNotFoundError:
             error_group = "El grupo que indicaste no existe"
