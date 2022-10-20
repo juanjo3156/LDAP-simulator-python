@@ -18,6 +18,8 @@ print(f"El servidor esta escuchando en {ADDR}")
 
 #FUNCIÓN PRINCIPAL DEL PROGRAMA
 def comienzo_servidor():
+    hilo_conexion = threading.Thread(target= conexion)
+    hilo_conexion.start()
     #Inicio de sesion del admin del servidor 
     global sesion_aprobada
     while sesion_aprobada == False:
@@ -37,6 +39,7 @@ def comienzo_servidor():
     #menu de opciones del codigo
     if sesion_aprobada == True:
         menu_de_opciones()
+
 
 def inicio_admin():
 
@@ -209,14 +212,14 @@ def inicio_sesion_cliente(conn):
                     else:
                         inicio_denegado ="Inicio de sesion denegado!\nTu usuario o contraseña son incorrectos"
                         conn.send(inicio_denegado.encode(FORMAT))
-                        conn.send("False".encode(FORMAT))
-                        break
+                        conn.send("".encode(FORMAT))
+                        
 
             datos_sesion.close()
         except FileNotFoundError:
             error_group = "El grupo que indicaste no existe"
             conn.send(error_group.encode(FORMAT))
-            conn.send("False".encode(FORMAT))
+            conn.send("".encode(FORMAT))
 
 
 def conexion():
@@ -242,4 +245,4 @@ def enviar_data(conn):
     msg = input()
     conn.send(("server: "+msg).encode(FORMAT))
 
-conexion()
+comienzo_servidor()

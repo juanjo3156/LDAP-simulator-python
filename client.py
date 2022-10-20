@@ -1,30 +1,31 @@
 import socket
 import threading
 
-
+aprobado_servidor = False
 
 HOST = "localhost"
 PORT = 6030
 ADDR = (HOST,PORT)
 FORMAT = "utf-8"
-aprobado_servidor = False
+
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 client.connect(ADDR)
 
-def mandar_mensaje():
+def mandar_comando():
     
     msg = input()
-    client.send(("cliente: "+msg).encode(FORMAT))
+    client.send((msg).encode(FORMAT))
         
         
             
-def recibir_mensaje():
+def recibir_comando():
     
     inst = client.recv(1024).decode(FORMAT)
     print(inst)
 
 
 def inicio_sesion():
+    
     global aprobado_servidor
     while aprobado_servidor == False:
         name_group = input("Ingrese el nombre de su grupo o area sin espacios al final: ")
@@ -49,18 +50,17 @@ def inicio_sesion():
  
 
 
-# def conexion():
-
-#     while True: 
-#         t1 = threading.Thread(target=recibir_mensaje)
-#         t1.start()
-#         t2 = threading.Thread(target = mandar_mensaje)
-#         t2.start()
+        
         
 def consola():
-    connect = True
-    while consola:
-        pass
+    while aprobado_servidor == False:
+        inicio_sesion()
+    while aprobado_servidor:
+        t1 = threading.Thread(target= recibir_comando)
+        t1.start()
+        t1.join()
 
-    
-inicio_sesion()
+        t2 = threading.Thread(target= mandar_comando)
+        t2.start()
+        t2.join()
+consola()
