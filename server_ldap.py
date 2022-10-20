@@ -15,11 +15,12 @@ server.bind(ADDR)
 server.listen()
 print(f"El servidor esta escuchando en {ADDR}")
 
+clientes = {}
 
 #FUNCIÓN PRINCIPAL DEL PROGRAMA
 def comienzo_servidor():
-    hilo_conexion = threading.Thread(target= conexion)
-    hilo_conexion.start()
+    hilo_conexion = threading.Thread(target = conexion)
+    hilo_conexion.start() 
     #Inicio de sesion del admin del servidor 
     global sesion_aprobada
     while sesion_aprobada == False:
@@ -40,7 +41,6 @@ def comienzo_servidor():
     if sesion_aprobada == True:
         menu_de_opciones()
 
-
 def inicio_admin():
 
     global sesion_aprobada
@@ -50,14 +50,16 @@ def inicio_admin():
     datos_sesion = open(f'ldap_files/groups/credenciales_admin.txt','r',encoding= FORMAT)
 
     for line in datos_sesion:
-            if line == f"{name_user}:{password_user}\n" or line == f"{name_user}:{password_user}" :
+            line = line.replace(" ","").replace("\n","")
             
-                print("Inicio de sesion aprobado!") 
+            if line == f"{name_user}:{password_user}":
                 sesion_aprobada = True
-                # print(sesion_aprobada)
-            else:
-        
-                print("Tu usuario o contraseña son incorrectos")
+            
+    if sesion_aprobada:
+                
+            print("Inicio de sesión aprobado!")
+    else:
+        print("Tu usuario o contraseña son incorrectos")
                 
 
     datos_sesion.close()
@@ -181,13 +183,14 @@ def ver_directorios():
 #         print(str(i)+".-"+elemento)
 
 #FUNCIONES DE SOCKECTS
-def inicio_sesion_cliente(conn):
+def inicio_sesion_cliente(conn,addr):
 
     global sesion_cliente
     
     aprobado = False
 
     while aprobado == False: 
+        print("inicio")
         name_group = conn.recv(1024).decode(FORMAT)
         # print(name_group)
         name_user = conn.recv(1024).decode(FORMAT)
@@ -195,54 +198,56 @@ def inicio_sesion_cliente(conn):
         password_user = conn.recv(1024).decode(FORMAT)
         # print(password_user)
         try: 
-            #
             datos_sesion = open(f'ldap_files/groups/Group_{name_group}.txt','r',encoding= FORMAT)
             #Recorre el archivo entre los usuarios buscando el nombre y contraseña indicados
             for line in datos_sesion:
-                
-                if line == f"{name_user}:{password_user}\n" or line == f"{name_user}:{password_user}" :
+                line = line.replace(" ","").replace("\n","")
+                if line == f"{name_user}:{password_user}":
                     aprobado = True
-                    if aprobado == True:
-                        inicio_aprobado ="Inicio de sesion aprobado!" 
-                        conn.send(inicio_aprobado.encode(FORMAT))
-                        aprobado_cliente = "True" 
-                        sesion_cliente = True
-                        conn.send(aprobado_cliente.encode(FORMAT))
-                        break
-                    else:
-                        inicio_denegado ="Inicio de sesion denegado!\nTu usuario o contraseña son incorrectos"
-                        conn.send(inicio_denegado.encode(FORMAT))
-                        conn.send("".encode(FORMAT))
-                        
+                
+            if aprobado:
+                    inicio_aprobado ="Inicio de sesion aprobado!" 
+                    conn.send(inicio_aprobado.encode(FORMAT))
+                    aprobado_cliente = "1"
+                    sesion_cliente = True
+                    conn.send(aprobado_cliente.encode(FORMAT))
+                    clientes[f"{addr[0]}:{str(len(clientes)+1)}"]={"group":name_group} 
+                    t2 = threading.Thread(target=recibir_comando,args=(conn,name_group))
+                    t2.start()
+                    break
+
+            else:
+                inicio_denegado ="Inicio de sesion denegado!\nTu usuario o contraseña son incorrectos"
+                conn.send(inicio_denegado.encode(FORMAT))
+                conn.send(str(0).encode(FORMAT))        
+                
 
             datos_sesion.close()
         except FileNotFoundError:
+            print("hola")
+            print("==============================")
             error_group = "El grupo que indicaste no existe"
             conn.send(error_group.encode(FORMAT))
-            conn.send("".encode(FORMAT))
-
+            conn.send(str(0).encode(FORMAT))
 
 def conexion():
-    conn,addr = server.accept()
-    t1 = threading.Thread(target = inicio_sesion_cliente,args=(conn,))
-    t1.start()
-    if sesion_cliente == True:
-        while True:
-            conn,addr = server.accept()
-            
-            t2 = threading.Thread(target=recibir_comando,args=(conn,))
-            t2.start()
-        
-
-def recibir_comando(conn,group):
+    while True:
+        conn,addr = server.accept()
+        t1 = threading.Thread(target = inicio_sesion_cliente,args=(conn,addr))
+        t1.start()
     
-    msg_client = conn.recv(1024).decode(FORMAT)
-    if msg_client == "look_directory":
-        pass
+    
+def recibir_comando(conn,group):
+    while True:
+        
+        msg_client = conn.recv(1024).decode(FORMAT)
+        if msg_client == "look":
+            conn.send(group.encode(FORMAT))
+    
 
 def enviar_data(conn):
-    
-    msg = input()
-    conn.send(("server: "+msg).encode(FORMAT))
 
-comienzo_servidor()
+        msg = input()
+        conn.send(("server: "+msg).encode(FORMAT))
+
+conexion()
