@@ -5,7 +5,7 @@ import os
 
 sesion_aprobada = False
 sesion_cliente = False
-HOST = "192.168.56.1"
+HOST = "10.24.8.155"
 PORT = 6030
 ADDR = (HOST,PORT)
 FORMAT = "utf-8"
@@ -77,7 +77,7 @@ def menu_de_opciones():
             añadir_grupo()
         elif opcion == "add_user":
             añadir_usuario()
-        elif opcion == "watch_directory":
+        elif opcion == "look_directory":
             ver_directorios()
         elif opcion == "log_out":
             sesion_aprobada = False
@@ -179,7 +179,7 @@ def ver_directorios():
 
 #FUNCIONES QUE PUEDE EJECUTAR EL CLIENTE DE FORMA REMOTA
 def solicitar_directorio(conn,group):
-    conn.send(f"Este es el directorio correspondiente al grupo de {group}:\n".encode(FORMAT))
+    conn.send(f'Este es el directorio correspondiente al grupo de "{group}":\n'.encode(FORMAT))
     conn.send("usa el comando abrir".encode(FORMAT))
     # conn.send("Carpetas y archivos disponibles:".encode(FORMAT))
     i = 1
@@ -196,10 +196,6 @@ def solicitar_directorio(conn,group):
     line_archivos_carpetas = "\n".join(line_archivos_carpetas)
     conn.send(f"{line_archivos_carpetas}".encode(FORMAT))
     
-    
-
-
-
 #FUNCIONES DE SOCKECTS
 def inicio_sesion_cliente(conn,addr):
 
@@ -262,7 +258,6 @@ def recibir_comando(conn,group):
             solicitar_directorio(conn,group)
         if msg_client == "":
             pass
-
     
 def enviar_data(conn):
 

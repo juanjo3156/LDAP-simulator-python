@@ -1,11 +1,7 @@
 import socket
 import threading
 
-
-
-
-
-
+#Establece la conexión con el servidor, pidiendole al usuario la ip y el puerto
 def establecer_conexion():
     global host,port,conexion_server
     data_conexion = input("Escribe bind para iniciar la conexion: ")
@@ -14,18 +10,26 @@ def establecer_conexion():
         port = input("Ingresa el puerto del servidor: ")
     conexion_server = True
 
+#se manda a llamar la función del server
 establecer_conexion()
 
+#Variable que identifica si el usuario inicio sesion correctamente o no,
+#se utiliza posteriormente para la coomprobación de que los datos del
+#usuario son correctos y con esto dejar de preguntarlos y mandarlos 
+#al servidor.
 aprobado_servidor = False
 
 
 ADDR = (host,int(port))
+#Formato de envio y reccepción de los bits 
 FORMAT = "utf-8"
 
+#creación del socket 
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 client.connect(ADDR)
 
-
+#emite un input para que el usuario ingrese comandos y los envia 
+#con un client.send al servidor
 def mandar_comando():
     
     msg = input(">:")
@@ -33,22 +37,17 @@ def mandar_comando():
     if msg == "unbind":
         client.close() 
            
-        
+#emite una escucha para los datos e información que nos quiera dar
+#el servidor      
 def recibir_info():
-    global conexion_server
- 
     info = client.recv(1024).decode(FORMAT)
     print(info)
 
-    # print("\n"+info)
-        
-        
-
-
+#Permite inicio de sesion al servidor desde el cliente.
 def inicio_sesion():
     
     global aprobado_servidor
-    name_group = input("Ingrese el nombre de su grupo o area sin espacios al final: ")
+    name_group = input("Ingrese el nombre de grupo o area: ")
     #remplazamos los espacios vacios para evitar errores de busqueda
     name_group = name_group.replace(" ","")
     client.send(name_group.encode(FORMAT))
@@ -68,16 +67,23 @@ def inicio_sesion():
 
     aprobado_servidor = bool(int(aprobado_servidor))
     print(aprobado_servidor)
-     
+
+#Función principal del cliente que permite la ejecución de las 
+#funciones principales. La función de inicio de sesión se repite
+#hasta que el usuario haya ingresado sus datos correctamente
 def consola():
-    global conexion_server
+
     while aprobado_servidor == False:
         inicio_sesion()
+        #posteriormente se crean e inicializan 2 hilos en los que se iniciara ma funcion 
+        #mandar_comando y recibir_info respectivamente
     while True:
+        #Estos hilos permiten que el usuario reciba y mande datos 
+        #de forma concurrente.
         hilo_de_envio = threading.Thread(target = mandar_comando)
         hilo_de_envio.start()
         hilo_de_recibo = threading.Thread(target = recibir_info)
         hilo_de_recibo.start()
         
-
+#Se llama a la fución principal del servidor
 consola()
