@@ -180,6 +180,7 @@ def ver_directorios():
 #FUNCIONES QUE PUEDE EJECUTAR EL CLIENTE DE FORMA REMOTA
 def solicitar_directorio(conn,group):
     conn.send(f"Este es el directorio correspondiente al grupo de {group}:\n".encode(FORMAT))
+    conn.send("usa el comando abrir".encode(FORMAT))
     # conn.send("Carpetas y archivos disponibles:".encode(FORMAT))
     i = 1
     c =0 
@@ -195,7 +196,7 @@ def solicitar_directorio(conn,group):
     line_archivos_carpetas = "\n".join(line_archivos_carpetas)
     conn.send(f"{line_archivos_carpetas}".encode(FORMAT))
     
-    conn.send("usa el comando abrir".encode(FORMAT))
+    
 
 
 
@@ -268,5 +269,4 @@ def enviar_data(conn):
         msg = input()
         conn.send(("server: "+msg).encode(FORMAT))
 
-
-añadir_usuario()
+comienzo_servidor()

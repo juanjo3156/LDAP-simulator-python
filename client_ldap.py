@@ -46,17 +46,21 @@ def recibir_info():
 
 
 def inicio_sesion():
-
+    
     global aprobado_servidor
     name_group = input("Ingrese el nombre de su grupo o area sin espacios al final: ")
+    #remplazamos los espacios vacios para evitar errores de busqueda
+    name_group = name_group.replace(" ","")
     client.send(name_group.encode(FORMAT))
-    name_user =input('Ingresa tu nombre de usuario: ')
-    client.send(name_user.encode(FORMAT))
-    password_user =input('Ingresa tu contraseña: ')
-    client.send(password_user.encode(FORMAT))
-        
 
-    
+    name_user =input('Ingresa tu nombre de usuario: ')
+    name_user = name_user.replace(" ","")
+    client.send(name_user.encode(FORMAT))
+
+    password_user =input('Ingresa tu contraseña: ')
+    password_user = password_user.replace(" ","")
+    client.send(password_user.encode(FORMAT))
+
     aprobado = client.recv(1024).decode(FORMAT)
     print(aprobado)
     aprobado_servidor =client.recv(1024).decode(FORMAT)
