@@ -5,7 +5,7 @@ import os
 
 sesion_aprobada = False
 sesion_cliente = False
-HOST = "localhost"
+HOST = "192.168.56.1"
 PORT = 6030
 ADDR = (HOST,PORT)
 FORMAT = "utf-8"
@@ -25,7 +25,7 @@ def comienzo_servidor():
     global sesion_aprobada
     while sesion_aprobada == False:
         print("============================================================")
-        iniciar_s = input("Bienvenido al servidor\npara usar el servidor necesitas iniciar sesión como administrador\n==================================================\n")
+        iniciar_s = input("Bienvenido al servidor\npara usar el servidor necesitas iniciar sesión como administrador\n==================================================\n:>")
         
 
         if iniciar_s == "iniciar_sesion":
@@ -87,6 +87,7 @@ def menu_de_opciones():
 def añadir_grupo():
     try: 
         name_group=input('ingresa el nombre del grupo/area: ')
+        name_group = name_group.replace(" ","")
         fichero = open(f'ldap_files/groups/Group_{name_group}.txt','x',encoding='utf-8')
         fichero.close()
         print(f"El grupo: {name_group} se creo correctamente")
@@ -97,9 +98,11 @@ def añadir_usuario():
 
       
     name_group = input("A que grupo quieres ingresar el usuario: ")
+    name_group = name_group.replace(" ","")
     name_user =input('ingresa el nombre de usuario: ')
+    name_user = name_user.replace(" ","")
     contra_user =input('ingresa la contraseña: ')
-            
+    contra_user = contra_user.replace(" ","")
     try:
         existencia = open(f'ldap_files/groups/Group_{name_group}.txt','r',encoding='utf-8')
         
@@ -175,12 +178,26 @@ def ver_directorios():
                 i+=1
 
 #FUNCIONES QUE PUEDE EJECUTAR EL CLIENTE DE FORMA REMOTA
-# def solicitar_directorio():
-#     i = 0 
-#     print("Este es tu directorio disponible:")
-#     lista = os.listdir(f'ldap_files/directorios/{group}')
-#     for elemento in lista:
-#         print(str(i)+".-"+elemento)
+def solicitar_directorio(conn,group):
+    conn.send(f"Este es el directorio correspondiente al grupo de {group}:\n".encode(FORMAT))
+    # conn.send("Carpetas y archivos disponibles:".encode(FORMAT))
+    i = 1
+    c =0 
+    carpetas_disponibles = ["ldap_files/directorios"]
+    carpetas_disponibles.append(group)
+    carpetas_disponibles = "/".join(carpetas_disponibles)
+    
+    line_archivos_carpetas = []
+    lista = os.listdir(f'{carpetas_disponibles}')
+    for line in lista:
+        line_archivos_carpetas.append(f"{i}.{line}")
+        i+=1
+    line_archivos_carpetas = "\n".join(line_archivos_carpetas)
+    conn.send(f"{line_archivos_carpetas}".encode(FORMAT))
+    
+    conn.send("usa el comando abrir".encode(FORMAT))
+
+
 
 #FUNCIONES DE SOCKECTS
 def inicio_sesion_cliente(conn,addr):
@@ -190,7 +207,7 @@ def inicio_sesion_cliente(conn,addr):
     aprobado = False
 
     while aprobado == False: 
-        print("inicio")
+       
         name_group = conn.recv(1024).decode(FORMAT)
         # print(name_group)
         name_user = conn.recv(1024).decode(FORMAT)
@@ -224,30 +241,32 @@ def inicio_sesion_cliente(conn,addr):
 
             datos_sesion.close()
         except FileNotFoundError:
-            print("hola")
-            print("==============================")
+        
             error_group = "El grupo que indicaste no existe"
             conn.send(error_group.encode(FORMAT))
             conn.send(str(0).encode(FORMAT))
 
 def conexion():
+     
     while True:
         conn,addr = server.accept()
         t1 = threading.Thread(target = inicio_sesion_cliente,args=(conn,addr))
         t1.start()
-    
     
 def recibir_comando(conn,group):
     while True:
         
         msg_client = conn.recv(1024).decode(FORMAT)
         if msg_client == "look":
-            conn.send(group.encode(FORMAT))
-    
+            solicitar_directorio(conn,group)
+        if msg_client == "":
+            pass
 
+    
 def enviar_data(conn):
 
         msg = input()
         conn.send(("server: "+msg).encode(FORMAT))
 
-conexion()
+
+añadir_usuario()
