@@ -19,6 +19,8 @@ establecer_conexion()
 #al servidor.
 aprobado_servidor = False
 
+# Variable para identificar que el usuario esta conectado
+usuario_conectado = False
 
 ADDR = (host,int(port))
 #Formato de envio y reccepción de los bits 
@@ -31,22 +33,32 @@ client.connect(ADDR)
 #emite un input para que el usuario ingrese comandos y los envia 
 #con un client.send al servidor
 def mandar_comando():
-    
-    msg = input(">:")
-    client.send((msg).encode(FORMAT))
-    if msg == "unbind":
-        client.close() 
+    global usuario_conectado
+
+    try:
+        while usuario_conectado:
+            msg = input(">:")
+            client.send((msg).encode(FORMAT))
+            if msg == "unbind":
+                usuario_conectado = False
+                client.close() 
+    except:
+        print("Se cerro el hilo para el envio de comandos")
            
 #emite una escucha para los datos e información que nos quiera dar
 #el servidor      
 def recibir_info():
-    info = client.recv(1024).decode(FORMAT)
-    print(info)
+    try:
+        while usuario_conectado:
+            info = client.recv(1024).decode(FORMAT)
+            print(info)
+    except:
+        print("Se cerro el hilo para el recibo de info")
 
 #Permite inicio de sesion al servidor desde el cliente.
 def inicio_sesion():
     
-    global aprobado_servidor
+    global aprobado_servidor, usuario_conectado
     name_group = input("Ingrese el nombre de grupo o area: ")
     #remplazamos los espacios vacios para evitar errores de busqueda
     name_group = name_group.replace(" ","")
@@ -66,6 +78,7 @@ def inicio_sesion():
     print(aprobado_servidor)
 
     aprobado_servidor = bool(int(aprobado_servidor))
+    usuario_conectado = aprobado_servidor
     print(aprobado_servidor)
 
 #Función principal del cliente que permite la ejecución de las 
@@ -77,13 +90,15 @@ def consola():
         inicio_sesion()
         #posteriormente se crean e inicializan 2 hilos en los que se iniciara ma funcion 
         #mandar_comando y recibir_info respectivamente
-    while True:
+
+    if usuario_conectado:
         #Estos hilos permiten que el usuario reciba y mande datos 
         #de forma concurrente.
         hilo_de_envio = threading.Thread(target = mandar_comando)
         hilo_de_envio.start()
         hilo_de_recibo = threading.Thread(target = recibir_info)
         hilo_de_recibo.start()
+
         
 #Se llama a la fución principal del servidor
 consola()
