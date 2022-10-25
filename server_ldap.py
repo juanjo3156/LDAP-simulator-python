@@ -7,7 +7,7 @@ sesion_aprobada = False
 sesion_cliente = False
 HOST = "10.24.8.155"
 PORT = 6030
-ADDR = (HOST,PORT)
+ADDR = (HOST, PORT)
 FORMAT = "utf-8"
 
 server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -251,13 +251,15 @@ def conexion():
         t1.start()
     
 def recibir_comando(conn,group):
-    while True:
-        
-        msg_client = conn.recv(1024).decode(FORMAT)
-        if msg_client == "look":
-            solicitar_directorio(conn,group)
-        if msg_client == "":
-            pass
+    try:
+        while True:
+            msg_client = conn.recv(1024).decode(FORMAT)
+            if msg_client == "look":
+                solicitar_directorio(conn,group)
+            if msg_client == "":
+                pass
+    except:
+        print("\nSe cerro el canal de ricibir comandos de la conexión: ", conn)
     
 def enviar_data(conn):
 
